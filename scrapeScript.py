@@ -7,7 +7,7 @@ from selenium.webdriver.common.action_chains import ActionChains
 from bs4 import BeautifulSoup
 import re
 
-from datetime import timedelta,datetime
+from datetime import timedelta, datetime
 
 from pymongo.mongo_client import MongoClient
 from pymongo.server_api import ServerApi
@@ -15,6 +15,7 @@ from pymongo.server_api import ServerApi
 from urllib.parse import quote_plus
 
 import threading
+
 
 def getMongoClient():
     uri = "mongodb+srv://dagulathiya30:" + \
@@ -62,25 +63,25 @@ def getLinkHTML(driver, itemlink):
 def scrapeMyntraNewID(driver, mid_base="/dresses?f=Brand%3A", brand_name="SASSAFRAS"):
     base_url = "https://www.myntra.com" + mid_base + brand_name + "&sort=new"
 
-    
     driver.get(base_url)
     curr_page_html = BeautifulSoup(driver.page_source, 'html.parser')
 
     nextPage = True
     mclient = getMongoClient()
     pid_mdp = mclient.get_database('Scrape').get_collection("BrandProductId")
-    
-    #Delete Older Entries
-    del_pid = pid_mdp.find({"date":{"$lt":datetime.today() + timedelta(days=-33)}},{"_id":0,"pid":1})
+
+    # Delete Older Entries
+    del_pid = pid_mdp.find(
+        {"date": {"$lt": datetime.today() + timedelta(days=-33)}}, {"_id": 0, "pid": 1})
     del_pid = [row["pid"] for row in list(del_pid)]
-    pid_mdp.delete_many({"pid":{"$in":del_pid}})
+    pid_mdp.delete_many({"pid": {"$in": del_pid}})
     # Fetch remaining entries
-    prev_pid = pid_mdp.find({"site_name":"Myntra","brand_name": brand_name})
+    prev_pid = pid_mdp.find({"site_name": "Myntra", "brand_name": brand_name})
     if not prev_pid:
         prev_pid = []
     else:
         prev_pid = [row["pid"] for row in prev_pid]
-        
+
     product_ids = []
     while nextPage:
         for elem in curr_page_html.find_all("li", {"class": "product-base"}):
@@ -90,7 +91,7 @@ def scrapeMyntraNewID(driver, mid_base="/dresses?f=Brand%3A", brand_name="SASSAF
                 nextPage = False
                 break
             product_ids.append(product_id)
-        
+
         if not nextPage:
             break
 
@@ -104,37 +105,43 @@ def scrapeMyntraNewID(driver, mid_base="/dresses?f=Brand%3A", brand_name="SASSAF
 
     ndata = []
     for pid in product_ids:
-        ndata.append({"site_name":"Myntra","brand_name":brand_name,"pid":pid,"date":datetime.today()})
+        ndata.append({"site_name": "Myntra", "brand_name": brand_name,
+                     "pid": pid, "date": datetime.today()})
     if ndata:
         pid_mdp.insert_many(ndata)
     mclient.close()
     return product_ids + prev_pid, del_pid
 
+
 def scrapeMyntra(driver, mid_base="/dresses?f=Brand%3A", brand_name="SASSAFRAS"):
     base_url = "https://www.myntra.com/"
 
-    #get all new ids and ids to delete
-    pids,del_pids = scrapeMyntraNewID(driver,mid_base=mid_base,brand_name=brand_name)
-    #print("page_done")
+    # get all new ids and ids to delete
+    pids, del_pids = scrapeMyntraNewID(
+        driver, mid_base=mid_base, brand_name=brand_name)
+    # print("page_done")
     ##############################
     if not pids:
         return
     ##############################
     data = []
     for pid in pids:
-        hpg = getLinkHTML(driver,base_url + str(pid))
+        hpg = getLinkHTML(driver, base_url + str(pid))
 
-        elem = hpg.find_all("div",{"id":"detailedRatingContainer"})
+        elem = hpg.find_all("div", {"id": "detailedRatingContainer"})
         if not elem:
             continue
-        
-        elem = elem[0]
-        avg = elem.find_all("div",{"class":"index-flexRow index-averageRating"})[0].find("span").text
-        cnt = elem.find_all("div",{"class":"index-countDesc"})[0].text.split(" ")[0]
-        
 
-        size_detail = hpg.find_all("div",{"class":"size-buttons-size-buttons"})
-        size_detail = size_detail[0].find_all("div",{"class":"size-buttons-buttonContainer"})
+        elem = elem[0]
+        avg = elem.find_all(
+            "div", {"class": "index-flexRow index-averageRating"})[0].find("span").text
+        cnt = elem.find_all(
+            "div", {"class": "index-countDesc"})[0].text.split(" ")[0]
+
+        size_detail = hpg.find_all(
+            "div", {"class": "size-buttons-size-buttons"})
+        size_detail = size_detail[0].find_all(
+            "div", {"class": "size-buttons-buttonContainer"})
 
         size_row = dict()
         for btn in size_detail:
@@ -142,22 +149,20 @@ def scrapeMyntra(driver, mid_base="/dresses?f=Brand%3A", brand_name="SASSAFRAS")
             cls_btn = btn["class"][0].lower()
             size_name = btn.find_all("p")[0].text
 
-            
             if "disabled" in cls_btn:
                 size_row[size_name] = "NA"
             else:
                 size_row[size_name] = "AV"
 
-        data.append({"pid":pid,"date":datetime.today(),"avg_rating":avg,"user_count":cnt,"Sizes":size_row})
-
+        data.append({"pid": pid, "date": datetime.today(),
+                    "avg_rating": avg, "user_count": cnt, "Sizes": size_row})
 
     #########################
     mclient = getMongoClient()
     pid_mdp = mclient.get_database('Scrape').get_collection("PRD_RT_CNT")
 
-
     ###### ---- Delete Products ----- #########
-    pid_mdp.delete_many({"pid":{"$in":del_pids}})
+    pid_mdp.delete_many({"pid": {"$in": del_pids}})
 
     pid_mdp.insert_many(data)
     mclient.close()
@@ -165,31 +170,33 @@ def scrapeMyntra(driver, mid_base="/dresses?f=Brand%3A", brand_name="SASSAFRAS")
     return
 
 
-
-def threadStarterMyntra(exe_pth = "./chromedriver-mac-arm64/",mid_base="/dresses?f=Brand%3A", brand_name="SASSAFRAS"):
+def threadStarterMyntra(exe_pth="./chromedriver-mac-arm64/", mid_base="/dresses?f=Brand%3A", brand_name="SASSAFRAS"):
 
     options = webdriver.ChromeOptions()
     service = ChromeService(executable_path=exe_pth)
     driver = webdriver.Chrome(service=service, options=options)
 
-    scrapeMyntra(driver,mid_base=mid_base,brand_name=brand_name)
+    scrapeMyntra(driver, mid_base=mid_base, brand_name=brand_name)
 
     driver.close()
 
-def startScraper(exe_pth = "./chromedriver-mac-arm64/"):
 
-    brands = ["SASSAFRAS","Anouk"]
-    mid_base="/dresses?f=Brand%3A"
+def startScraper(exe_pth="./chromedriver-mac-arm64/"):
+
+    brands = ["SASSAFRAS", "Anouk"]
+    mid_base = "/dresses?f=Brand%3A"
     thrds = []
     for brd in brands:
 
-        t1 = threading.Thread(target=threadStarterMyntra,args=(),kwargs={"exe_pth":exe_pth,"mid_base":mid_base,"brand_name":brd})
+        t1 = threading.Thread(target=threadStarterMyntra, args=(), kwargs={
+                              "exe_pth": exe_pth, "mid_base": mid_base, "brand_name": brd})
         thrds.append(t1)
 
     for t in thrds:
         t.start()
     for t in thrds:
-        t.join()        
+        t.join()
     return
+
 
 startScraper()
