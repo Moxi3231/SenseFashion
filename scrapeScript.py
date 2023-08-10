@@ -18,9 +18,7 @@ import threading
 
 
 def getMongoClient():
-    uri = "mongodb+srv://dagulathiya30:" + \
-        quote_plus("Darshan@45") + \
-        "@scrape.8yqpmc0.mongodb.net/?retryWrites=true&w=majority"
+    uri = "mongodb+srv://dagulathiya30:Darshan%4045@scrape.8yqpmc0.mongodb.net/"
     client = MongoClient(uri, server_api=ServerApi('1'))
     return client
 
@@ -173,7 +171,7 @@ def scrapeMyntra(driver, mid_base="/dresses?f=Brand%3A", brand_name="SASSAFRAS")
 def threadStarterMyntra(exe_pth="./chromedriver-mac-arm64/", mid_base="/dresses?f=Brand%3A", brand_name="SASSAFRAS"):
 
     options = webdriver.ChromeOptions()
-    service = ChromeService(executable_path=exe_pth)
+    service = ChromeService()
     driver = webdriver.Chrome(service=service, options=options)
 
     scrapeMyntra(driver, mid_base=mid_base, brand_name=brand_name)
@@ -181,9 +179,9 @@ def threadStarterMyntra(exe_pth="./chromedriver-mac-arm64/", mid_base="/dresses?
     driver.close()
 
 
-def startScraper(exe_pth="./chromedriver-mac-arm64/"):
+def startScraper(exe_pth="E:\\Scrap\\chromedriver-win64\\"):
 
-    brands = ["SASSAFRAS", "Anouk"]
+    brands = ["SASSAFRAS", "Anouk","Tokyo Talkies"]
     mid_base = "/dresses?f=Brand%3A"
     thrds = []
     for brd in brands:
@@ -198,5 +196,5 @@ def startScraper(exe_pth="./chromedriver-mac-arm64/"):
         t.join()
     return
 
-
-startScraper()
+if __name__ == "__main__":
+    startScraper(exe_pth="E:\\Scrap\\chromedriver-win64")
