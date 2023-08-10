@@ -125,36 +125,41 @@ def scrapeMyntra(driver, mid_base="/dresses?f=Brand%3A", brand_name="SASSAFRAS")
     data = []
     for pid in pids:
         hpg = getLinkHTML(driver, base_url + str(pid))
+        try:
+            elem = hpg.find_all("div", {"id": "detailedRatingContainer"})
+            if not elem:
+                continue
 
-        elem = hpg.find_all("div", {"id": "detailedRatingContainer"})
-        if not elem:
-            continue
+            elem = elem[0]
+            avg = elem.find_all(
+                "div", {"class": "index-flexRow index-averageRating"})[0].find("span").text
+            cnt = elem.find_all(
+                "div", {"class": "index-countDesc"})[0].text.split(" ")[0]
 
-        elem = elem[0]
-        avg = elem.find_all(
-            "div", {"class": "index-flexRow index-averageRating"})[0].find("span").text
-        cnt = elem.find_all(
-            "div", {"class": "index-countDesc"})[0].text.split(" ")[0]
+            size_detail = hpg.find_all(
+                "div", {"class": "size-buttons-size-buttons"})
+            size_row = dict()
 
-        size_detail = hpg.find_all(
-            "div", {"class": "size-buttons-size-buttons"})
-        size_detail = size_detail[0].find_all(
-            "div", {"class": "size-buttons-buttonContainer"})
+            if size_detail:
+                size_detail = size_detail[0].find_all(
+                    "div", {"class": "size-buttons-buttonContainer"})
 
-        size_row = dict()
-        for btn in size_detail:
-            btn = btn.find_all("button")[0]
-            cls_btn = btn["class"][0].lower()
-            size_name = btn.find_all("p")[0].text
+                for btn in size_detail:
+                    btn = btn.find_all("button")[0]
+                    cls_btn = btn["class"][0].lower()
+                    size_name = btn.find_all("p")[0].text
 
-            if "disabled" in cls_btn:
-                size_row[size_name] = "NA"
-            else:
-                size_row[size_name] = "AV"
+                    if "disabled" in cls_btn:
+                        size_row[size_name] = "NA"
+                    else:
+                        size_row[size_name] = "AV"
 
-        data.append({"pid": pid, "date": datetime.today(),
-                    "avg_rating": avg, "user_count": cnt, "Sizes": size_row})
+            data.append({"pid": pid, "date": datetime.today(),
+                        "avg_rating": avg, "user_count": cnt, "Sizes": size_row})
+        except Exception as e:
+            print("An exception occurred",e)
 
+            ## PUt logs file here
     #########################
     mclient = getMongoClient()
     pid_mdp = mclient.get_database('Scrape').get_collection("PRD_RT_CNT")
@@ -180,8 +185,11 @@ def threadStarterMyntra(exe_pth="./chromedriver-mac-arm64/", mid_base="/dresses?
 
 
 def startScraper(exe_pth="E:\\Scrap\\chromedriver-win64\\"):
-
+    ##########
+    # Put your brands here
     brands = ["SASSAFRAS", "Anouk","Tokyo Talkies"]
+
+    ##########
     mid_base = "/dresses?f=Brand%3A"
     thrds = []
     for brd in brands:
