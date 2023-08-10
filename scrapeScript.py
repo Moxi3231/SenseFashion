@@ -124,8 +124,9 @@ def scrapeMyntra(driver, mid_base="/dresses?f=Brand%3A", brand_name="SASSAFRAS")
     ##############################
     data = []
     for pid in pids:
-        hpg = getLinkHTML(driver, base_url + str(pid))
+        
         try:
+            hpg = getLinkHTML(driver, base_url + str(pid))
             elem = hpg.find_all("div", {"id": "detailedRatingContainer"})
             if not elem:
                 continue
@@ -158,6 +159,7 @@ def scrapeMyntra(driver, mid_base="/dresses?f=Brand%3A", brand_name="SASSAFRAS")
                         "avg_rating": avg, "user_count": cnt, "Sizes": size_row})
         except Exception as e:
             print("An exception occurred",e)
+            print("PID",pid)
 
             ## PUt logs file here
     #########################
