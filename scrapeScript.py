@@ -18,7 +18,7 @@ import threading
 
 
 def getMongoClient():
-    uri = "mongodb+srv://dagulathiya30:Darshan%4045@scrape.8yqpmc0.mongodb.net/"
+    uri = "mongodb://localhost:27017/"
     client = MongoClient(uri, server_api=ServerApi('1'))
     return client
 
