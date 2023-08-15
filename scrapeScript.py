@@ -139,6 +139,9 @@ def scrapeMyntra(driver, mid_base="/dresses?f=Brand%3A", brand_name="SASSAFRAS")
 
             size_detail = hpg.find_all(
                 "div", {"class": "size-buttons-size-buttons"})
+            sp = hpg.find("span",{"class":"pdp-price"})
+            if sp:
+                sp = sp.text[1:]
             size_row = dict()
 
             if size_detail:
@@ -148,7 +151,7 @@ def scrapeMyntra(driver, mid_base="/dresses?f=Brand%3A", brand_name="SASSAFRAS")
                 for btn in size_detail:
                     btn = btn.find_all("button")[0]
                     cls_btn = btn["class"][0].lower()
-                    size_name = btn.find_all("p")[0].text
+                    size_name = btn.find_all("p")[0].text.split(" ")[0]
 
                     if "disabled" in cls_btn:
                         size_row[size_name] = "NA"
@@ -156,7 +159,7 @@ def scrapeMyntra(driver, mid_base="/dresses?f=Brand%3A", brand_name="SASSAFRAS")
                         size_row[size_name] = "AV"
 
             data.append({"pid": pid, "date": datetime.today(),
-                        "avg_rating": avg, "user_count": cnt, "Sizes": size_row})
+                        "avg_rating": avg, "user_count": cnt, "Sizes": size_row,"SP":sp})
         except Exception as e:
             print("An exception occurred",e)
             print("PID",pid)
