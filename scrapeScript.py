@@ -33,15 +33,13 @@ def pressClear(driver):
 
 
 def clearBrowser(driver):
-    driver.execute_script("window.open('')")
-    driver.switch_to.window(driver.window_handles[1])
+    driver.switch_to.window(driver.window_handles[0])
     driver.get("chrome://settings/?search=clear")
 
     pressClear(driver)
     pressClear(driver)
 
-    driver.close()
-    driver.switch_to.window(driver.window_handles[0])
+    driver.switch_to.window(driver.window_handles[1])
 
 
 def getLinkHTML(driver, itemlink):
@@ -49,18 +47,19 @@ def getLinkHTML(driver, itemlink):
     clearBrowser(driver)
 
     driver.execute_script("window.open('')")
-    driver.switch_to.window(driver.window_handles[1])
+    driver.switch_to.window(driver.window_handles[2])
     driver.get(itemlink)
 
     data = driver.page_source
     driver.close()
-    driver.switch_to.window(driver.window_handles[0])
+    driver.switch_to.window(driver.window_handles[1])
     return BeautifulSoup(data, 'html.parser')
 
 
 def scrapeMyntraNewID(driver, mid_base="/dresses?f=Brand%3A", brand_name="SASSAFRAS"):
     base_url = "https://www.myntra.com" + mid_base + brand_name + "&sort=new"
 
+    driver.switch_to.window(driver.window_handles[1])
     driver.get(base_url)
     curr_page_html = BeautifulSoup(driver.page_source, 'html.parser')
 
@@ -75,17 +74,16 @@ def scrapeMyntraNewID(driver, mid_base="/dresses?f=Brand%3A", brand_name="SASSAF
     pid_mdp.delete_many({"pid": {"$in": del_pid}})
     # Fetch remaining entries
     prev_pid = pid_mdp.find({"site_name": "Myntra", "brand_name": brand_name})
-    if not prev_pid:
-        prev_pid = []
-    else:
-        prev_pid = [row["pid"] for row in prev_pid]
 
+    hash_prev_id = dict()
+    for row in prev_pid:
+        hash_prev_id[row["pid"]] = True
     product_ids = []
     while nextPage:
         for elem in curr_page_html.find_all("li", {"class": "product-base"}):
             lnk = elem.find('a')['href']
             product_id = re.findall("[0-9]+\\/buy", lnk)[0][:-4]
-            if product_id in prev_pid:
+            if hash_prev_id.get(product_id,False):
                 nextPage = False
                 break
             product_ids.append(product_id)
@@ -102,13 +100,15 @@ def scrapeMyntraNewID(driver, mid_base="/dresses?f=Brand%3A", brand_name="SASSAF
             curr_page_html = getLinkHTML(driver, next_link)
 
     ndata = []
-    for pid in product_ids:
+    for pid in set(product_ids):
+        if hash_prev_id.get(product_id,False):
+            continue
         ndata.append({"site_name": "Myntra", "brand_name": brand_name,
                      "pid": pid, "date": datetime.today()})
     if ndata:
         pid_mdp.insert_many(ndata)
     mclient.close()
-    return product_ids + prev_pid, del_pid
+    return list(set(product_ids + prev_pid)), del_pid
 
 
 def scrapeMyntra(driver, mid_base="/dresses?f=Brand%3A", brand_name="SASSAFRAS"):
@@ -183,6 +183,10 @@ def threadStarterMyntra(exe_pth="./chromedriver-mac-arm64/", mid_base="/dresses?
     options = webdriver.ChromeOptions()
     service = ChromeService()
     driver = webdriver.Chrome(service=service, options=options)
+    
+    driver.get("chrome://settings/?search=clear")
+    driver.execute_script("window.open('')")
+    driver.switch_to.window(driver.window_handles[1])
 
     scrapeMyntra(driver, mid_base=mid_base, brand_name=brand_name)
 
