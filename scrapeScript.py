@@ -108,7 +108,7 @@ def scrapeMyntraNewID(driver, mid_base="/dresses?f=Brand%3A", brand_name="SASSAF
     if ndata:
         pid_mdp.insert_many(ndata)
     mclient.close()
-    return list(set(product_ids + prev_pid)), del_pid
+    return list(set(product_ids + list(hash_prev_id.keys()))), del_pid
 
 
 def scrapeMyntra(driver, mid_base="/dresses?f=Brand%3A", brand_name="SASSAFRAS"):
