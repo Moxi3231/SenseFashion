@@ -31,12 +31,19 @@ def pressClear(driver):
     ac.send_keys(Keys.TAB + Keys.ENTER)
     ac.perform()
 
+def safeCheck(driver):
 
+    if len(driver.window_handles) >= 2:
+        for i in range(2,len(driver.window_handles)):
+            driver.switch_to.window(driver.window_handles[i])
+            driver.close()
+    driver.switch_to.window(driver.window_handles[1])
+    return 
 def clearBrowser(driver):
     driver.switch_to.window(driver.window_handles[0])
     driver.get("chrome://settings/?search=clear")
-
     pressClear(driver)
+    driver.get("chrome://settings/?search=clear")
     pressClear(driver)
 
     driver.switch_to.window(driver.window_handles[1])
@@ -45,6 +52,7 @@ def clearBrowser(driver):
 def getLinkHTML(driver, itemlink):
 
     clearBrowser(driver)
+    safeCheck(driver)
 
     driver.execute_script("window.open('')")
     driver.switch_to.window(driver.window_handles[2])
@@ -61,6 +69,8 @@ def scrapeMyntraNewID(driver, mid_base="/dresses?f=Brand%3A", brand_name="SASSAF
 
     driver.switch_to.window(driver.window_handles[1])
     driver.get(base_url)
+    safeCheck(driver)
+    
     curr_page_html = BeautifulSoup(driver.page_source, 'html.parser')
 
     nextPage = True
