@@ -210,7 +210,9 @@ def startScraper(exe_pth="E:\\Scrap\\chromedriver-win64\\"):
     # Put your brands and prefix of links here
     #brands = ["SASSAFRAS", "Anouk", "Tokyo Talkies"]
     prefix_link_brand = {
-        "/dresses?f=Brand%3A":["SASSAFRAS", "Anouk", "Tokyo Talkies"]
+        "/dresses?f=Brand%3A":["SASSAFRAS", "Anouk", "Tokyo Talkies"],
+
+        "url": ["brandname"]
         
         }
     ##########
@@ -219,7 +221,7 @@ def startScraper(exe_pth="E:\\Scrap\\chromedriver-win64\\"):
     for mid_base in prefix_link_brand:
         for brand in prefix_link_brand[mid_base]:
             t1 = threading.Thread(target=threadStarterMyntra, args=(), kwargs={
-                              "exe_pth": exe_pth, "mid_base": mid_base, "brand_name": prefix_link_brand[brand]})
+                              "exe_pth": exe_pth, "mid_base": mid_base, "brand_name": brand})
             thrds.append(t1)
 
     for t in thrds:
