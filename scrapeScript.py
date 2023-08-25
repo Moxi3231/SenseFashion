@@ -86,7 +86,7 @@ def scrapeMyntraNewID(driver, mid_base="/dresses?f=Brand%3A", brand_name="SASSAF
     del_pid = [row["pid"] for row in list(del_pid)]
     pid_mdp.delete_many({"pid": {"$in": del_pid}})
     # Fetch remaining entries
-    prev_pid = pid_mdp.find({"site_name": "Myntra", "brand_name": brand_name, "category": category})
+    prev_pid = pid_mdp.find({"site_name": "Myntra", "brand_name": brand_name})
 
     hash_prev_id = dict()
     for row in prev_pid:
@@ -117,7 +117,7 @@ def scrapeMyntraNewID(driver, mid_base="/dresses?f=Brand%3A", brand_name="SASSAF
         if hash_prev_id.get(product_id, False):
             continue
         ndata.append({"site_name": "Myntra", "brand_name": brand_name,
-                     "pid": pid, "date": datetime.today()})
+                     "pid": pid, "date": datetime.today(), "category": category})
     if ndata:
         pid_mdp.insert_many(ndata)
     mclient.close()
@@ -220,7 +220,7 @@ def startScraper(exe_pth="E:\\Scrap\\chromedriver-win64\\"):
     # mid_base = "/dresses?f=Brand%3A"
     thrds = []
     for category in prefix_link_brand:
-        for brand in prefix_link_brand[category]:
+        for brand in prefix_link_brand[category]["brands"]:
             t1 = threading.Thread(target=threadStarterMyntra, args=(), kwargs={
                 "exe_pth": exe_pth, "mid_base": prefix_link_brand[category]['url'], "brand_name": brand, "category": category})
             thrds.append(t1)
