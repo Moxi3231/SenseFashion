@@ -31,14 +31,17 @@ def pressClear(driver):
     ac.send_keys(Keys.TAB + Keys.ENTER)
     ac.perform()
 
+
 def safeCheck(driver):
 
     if len(driver.window_handles) >= 2:
-        for i in range(2,len(driver.window_handles)):
+        for i in range(2, len(driver.window_handles)):
             driver.switch_to.window(driver.window_handles[i])
             driver.close()
     driver.switch_to.window(driver.window_handles[1])
-    return 
+    return
+
+
 def clearBrowser(driver):
     driver.switch_to.window(driver.window_handles[0])
     driver.get("chrome://settings/?search=clear")
@@ -70,7 +73,7 @@ def scrapeMyntraNewID(driver, mid_base="/dresses?f=Brand%3A", brand_name="SASSAF
     driver.switch_to.window(driver.window_handles[1])
     driver.get(base_url)
     safeCheck(driver)
-    
+
     curr_page_html = BeautifulSoup(driver.page_source, 'html.parser')
 
     nextPage = True
@@ -93,7 +96,7 @@ def scrapeMyntraNewID(driver, mid_base="/dresses?f=Brand%3A", brand_name="SASSAF
         for elem in curr_page_html.find_all("li", {"class": "product-base"}):
             lnk = elem.find('a')['href']
             product_id = re.findall("[0-9]+\\/buy", lnk)[0][:-4]
-            if hash_prev_id.get(product_id,False):
+            if hash_prev_id.get(product_id, False):
                 nextPage = False
                 break
             product_ids.append(product_id)
@@ -111,7 +114,7 @@ def scrapeMyntraNewID(driver, mid_base="/dresses?f=Brand%3A", brand_name="SASSAF
 
     ndata = []
     for pid in set(product_ids):
-        if hash_prev_id.get(product_id,False):
+        if hash_prev_id.get(product_id, False):
             continue
         ndata.append({"site_name": "Myntra", "brand_name": brand_name,
                      "pid": pid, "date": datetime.today()})
@@ -134,22 +137,21 @@ def scrapeMyntra(driver, mid_base="/dresses?f=Brand%3A", brand_name="SASSAFRAS")
     ##############################
     data = []
     for pid in pids:
-        
+
         try:
             hpg = getLinkHTML(driver, base_url + str(pid))
             elem = hpg.find_all("div", {"id": "detailedRatingContainer"})
-            if not elem:
-                continue
-
-            elem = elem[0]
-            avg = elem.find_all(
-                "div", {"class": "index-flexRow index-averageRating"})[0].find("span").text
-            cnt = elem.find_all(
-                "div", {"class": "index-countDesc"})[0].text.split(" ")[0]
+            avg, cnt = 0, 0
+            if elem:
+                elem = elem[0]
+                avg = elem.find_all(
+                    "div", {"class": "index-flexRow index-averageRating"})[0].find("span").text
+                cnt = elem.find_all(
+                    "div", {"class": "index-countDesc"})[0].text.split(" ")[0]
 
             size_detail = hpg.find_all(
                 "div", {"class": "size-buttons-size-buttons"})
-            sp = hpg.find("span",{"class":"pdp-price"})
+            sp = hpg.find("span", {"class": "pdp-price"})
             if sp:
                 sp = sp.text[1:]
             size_row = dict()
@@ -169,12 +171,12 @@ def scrapeMyntra(driver, mid_base="/dresses?f=Brand%3A", brand_name="SASSAFRAS")
                         size_row[size_name] = "AV"
 
             data.append({"pid": pid, "date": datetime.today(),
-                        "avg_rating": avg, "user_count": cnt, "Sizes": size_row,"SP":sp})
+                        "avg_rating": avg, "user_count": cnt, "Sizes": size_row, "SP": sp})
         except Exception as e:
-            print("An exception occurred",e)
-            print("PID",pid)
+            print("An exception occurred", e)
+            print("PID", pid)
 
-            ## PUt logs file here
+            # PUt logs file here
     #########################
     mclient = getMongoClient()
     pid_mdp = mclient.get_database('Scrape').get_collection("PRD_RT_CNT")
@@ -193,7 +195,7 @@ def threadStarterMyntra(exe_pth="./chromedriver-mac-arm64/", mid_base="/dresses?
     options = webdriver.ChromeOptions()
     service = ChromeService()
     driver = webdriver.Chrome(service=service, options=options)
-    
+
     driver.get("chrome://settings/?search=clear")
     driver.execute_script("window.open('')")
     driver.switch_to.window(driver.window_handles[1])
@@ -205,23 +207,27 @@ def threadStarterMyntra(exe_pth="./chromedriver-mac-arm64/", mid_base="/dresses?
 
 def startScraper(exe_pth="E:\\Scrap\\chromedriver-win64\\"):
     ##########
-    # Put your brands here
-    brands = ["SASSAFRAS", "Anouk","Tokyo Talkies"]
-
+    # Put your brands and prefix of links here
+    #brands = ["SASSAFRAS", "Anouk", "Tokyo Talkies"]
+    prefix_link_brand = {
+        "/dresses?f=Brand%3A":["SASSAFRAS", "Anouk", "Tokyo Talkies"]
+        
+        }
     ##########
-    mid_base = "/dresses?f=Brand%3A"
+    #mid_base = "/dresses?f=Brand%3A"
     thrds = []
-    for brd in brands:
-
-        t1 = threading.Thread(target=threadStarterMyntra, args=(), kwargs={
-                              "exe_pth": exe_pth, "mid_base": mid_base, "brand_name": brd})
-        thrds.append(t1)
+    for mid_base in prefix_link_brand:
+        for brand in prefix_link_brand[mid_base]:
+            t1 = threading.Thread(target=threadStarterMyntra, args=(), kwargs={
+                              "exe_pth": exe_pth, "mid_base": mid_base, "brand_name": prefix_link_brand[brand]})
+            thrds.append(t1)
 
     for t in thrds:
         t.start()
     for t in thrds:
         t.join()
     return
+
 
 if __name__ == "__main__":
     startScraper(exe_pth="E:\\Scrap\\chromedriver-win64")
