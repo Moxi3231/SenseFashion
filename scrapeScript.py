@@ -67,7 +67,7 @@ def getLinkHTML(driver, itemlink):
     return BeautifulSoup(data, 'html.parser')
 
 
-def scrapeMyntraNewID(driver, mid_base="/dresses?f=Brand%3A", brand_name="SASSAFRAS"):
+def scrapeMyntraNewID(driver, mid_base="/dresses?f=Brand%3A", brand_name="SASSAFRAS", category = "DRESSES"):
     base_url = "https://www.myntra.com" + mid_base + brand_name + "&sort=new"
 
     driver.switch_to.window(driver.window_handles[1])
@@ -117,19 +117,19 @@ def scrapeMyntraNewID(driver, mid_base="/dresses?f=Brand%3A", brand_name="SASSAF
         if hash_prev_id.get(product_id, False):
             continue
         ndata.append({"site_name": "Myntra", "brand_name": brand_name,
-                     "pid": pid, "date": datetime.today()})
+                     "pid": pid, "date": datetime.today(), "category": category})
     if ndata:
         pid_mdp.insert_many(ndata)
     mclient.close()
     return list(set(product_ids + list(hash_prev_id.keys()))), del_pid
 
 
-def scrapeMyntra(driver, mid_base="/dresses?f=Brand%3A", brand_name="SASSAFRAS"):
+def scrapeMyntra(driver, mid_base="/dresses?f=Brand%3A", brand_name="SASSAFRAS", category = "DRESSES"):
     base_url = "https://www.myntra.com/"
 
     # get all new ids and ids to delete
     pids, del_pids = scrapeMyntraNewID(
-        driver, mid_base=mid_base, brand_name=brand_name)
+        driver, mid_base=mid_base, brand_name=brand_name, category=category)
     # print("page_done")
     ##############################
     if not pids:
@@ -190,7 +190,7 @@ def scrapeMyntra(driver, mid_base="/dresses?f=Brand%3A", brand_name="SASSAFRAS")
     return
 
 
-def threadStarterMyntra(exe_pth="./chromedriver-mac-arm64/", mid_base="/dresses?f=Brand%3A", brand_name="SASSAFRAS"):
+def threadStarterMyntra(exe_pth="./chromedriver-mac-arm64/", mid_base="/dresses?f=Brand%3A", brand_name="SASSAFRAS", category = "DRESSES"):
 
     options = webdriver.ChromeOptions()
     service = ChromeService()
@@ -200,7 +200,7 @@ def threadStarterMyntra(exe_pth="./chromedriver-mac-arm64/", mid_base="/dresses?
     driver.execute_script("window.open('')")
     driver.switch_to.window(driver.window_handles[1])
 
-    scrapeMyntra(driver, mid_base=mid_base, brand_name=brand_name)
+    scrapeMyntra(driver, mid_base=mid_base, brand_name=brand_name, category = category)
 
     driver.close()
 
@@ -208,18 +208,24 @@ def threadStarterMyntra(exe_pth="./chromedriver-mac-arm64/", mid_base="/dresses?
 def startScraper(exe_pth="E:\\Scrap\\chromedriver-win64\\"):
     ##########
     # Put your brands and prefix of links here
-    #brands = ["SASSAFRAS", "Anouk", "Tokyo Talkies"]
+    # brands = ["SASSAFRAS", "Anouk", "Tokyo Talkies"]
     prefix_link_brand = {
-        "/dresses?f=Brand%3A":["SASSAFRAS", "Anouk", "Tokyo Talkies"]
+                "DRESSES": {'url': "/dresses?f=Brand%3A", "brands": ["SASSAFRAS", "Anouk","Tokyo Talkies","Athena","H&M","Berrylush","DressBerry","Indo Era","Janasya","Libas"]},
+
+                "KURTA/SETS": {'url': "/women-kurtas-kurtis-suits?f=Brand%3A", "brands": ["Anouk","Sangria","Vishudh","HERE&NOW","AHIKA","Indo Era","Libas","AURELIA","Janasya","Varanga","W","Soch","Rangriti","Ishin","RANGMANCH BY PANTALOONS","FASHOR","Inddus"]}
         
-        }
+
+        ###
+        # , "CategoryName" : {'url': 'url_prefix_here', 'brands' : ['brandname1','brandname2']}
+        ###
+    }
     ##########
-    #mid_base = "/dresses?f=Brand%3A"
+    # mid_base = "/dresses?f=Brand%3A"
     thrds = []
-    for mid_base in prefix_link_brand:
-        for brand in prefix_link_brand[mid_base]:
+    for category in prefix_link_brand:
+        for brand in prefix_link_brand[category]["brands"]:
             t1 = threading.Thread(target=threadStarterMyntra, args=(), kwargs={
-                              "exe_pth": exe_pth, "mid_base": mid_base, "brand_name": prefix_link_brand[brand]})
+                "exe_pth": exe_pth, "mid_base": prefix_link_brand[category]['url'], "brand_name": brand, "category": category})
             thrds.append(t1)
 
     for t in thrds:
