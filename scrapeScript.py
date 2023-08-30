@@ -15,6 +15,7 @@ from pymongo.server_api import ServerApi
 from urllib.parse import quote_plus
 
 import threading
+from concurrent.futures import ThreadPoolExecutor, as_completed
 
 
 def getMongoClient():
@@ -67,7 +68,7 @@ def getLinkHTML(driver, itemlink):
     return BeautifulSoup(data, 'html.parser')
 
 
-def scrapeMyntraNewID(driver, mid_base="/dresses?f=Brand%3A", brand_name="SASSAFRAS", category = "DRESSES"):
+def scrapeMyntraNewID(driver, mid_base="/dresses?f=Brand%3A", brand_name="SASSAFRAS", category="DRESSES"):
     base_url = "https://www.myntra.com" + mid_base + brand_name + "&sort=new"
 
     driver.switch_to.window(driver.window_handles[1])
@@ -124,7 +125,7 @@ def scrapeMyntraNewID(driver, mid_base="/dresses?f=Brand%3A", brand_name="SASSAF
     return list(set(product_ids + list(hash_prev_id.keys()))), del_pid
 
 
-def scrapeMyntra(driver, mid_base="/dresses?f=Brand%3A", brand_name="SASSAFRAS", category = "DRESSES"):
+def scrapeMyntra(driver, mid_base="/dresses?f=Brand%3A", brand_name="SASSAFRAS", category="DRESSES"):
     base_url = "https://www.myntra.com/"
 
     # get all new ids and ids to delete
@@ -190,7 +191,7 @@ def scrapeMyntra(driver, mid_base="/dresses?f=Brand%3A", brand_name="SASSAFRAS",
     return
 
 
-def threadStarterMyntra(exe_pth="./chromedriver-mac-arm64/", mid_base="/dresses?f=Brand%3A", brand_name="SASSAFRAS", category = "DRESSES"):
+def threadStarterMyntra(exe_pth="./chromedriver-mac-arm64/", mid_base="/dresses?f=Brand%3A", brand_name="SASSAFRAS", category="DRESSES"):
 
     options = webdriver.ChromeOptions()
     service = ChromeService()
@@ -200,7 +201,8 @@ def threadStarterMyntra(exe_pth="./chromedriver-mac-arm64/", mid_base="/dresses?
     driver.execute_script("window.open('')")
     driver.switch_to.window(driver.window_handles[1])
 
-    scrapeMyntra(driver, mid_base=mid_base, brand_name=brand_name, category = category)
+    scrapeMyntra(driver, mid_base=mid_base,
+                 brand_name=brand_name, category=category)
 
     driver.close()
 
@@ -210,10 +212,7 @@ def startScraper(exe_pth="E:\\Scrap\\chromedriver-win64\\"):
     # Put your brands and prefix of links here
     # brands = ["SASSAFRAS", "Anouk", "Tokyo Talkies"]
     prefix_link_brand = {
-                "DRESSES": {'url': "/dresses?f=Brand%3A", "brands": ["SASSAFRAS", "Anouk","Tokyo Talkies","Athena","H&M","Berrylush","DressBerry","Indo Era","Janasya","Libas"]},
-
-                "KURTA/SETS": {'url': "/women-kurtas-kurtis-suits?f=Brand%3A", "brands": ["Anouk","Sangria","Vishudh","HERE&NOW","AHIKA","Indo Era","Libas","AURELIA","Janasya","Varanga","W","Soch","Rangriti","Ishin","RANGMANCH BY PANTALOONS","FASHOR","Inddus"]}
-        
+        "DRESSES": {'url': "/dresses?f=Brand%3A", "brands": ["SASSAFRAS", "Anouk", "Tokyo Talkies"]}
 
         ###
         # , "CategoryName" : {'url': 'url_prefix_here', 'brands' : ['brandname1','brandname2']}
@@ -221,19 +220,36 @@ def startScraper(exe_pth="E:\\Scrap\\chromedriver-win64\\"):
     }
     ##########
     # mid_base = "/dresses?f=Brand%3A"
-    thrds = []
+    scrape_params = []
     for category in prefix_link_brand:
         for brand in prefix_link_brand[category]["brands"]:
-            t1 = threading.Thread(target=threadStarterMyntra, args=(), kwargs={
-                "exe_pth": exe_pth, "mid_base": prefix_link_brand[category]['url'], "brand_name": brand, "category": category})
-            thrds.append(t1)
+            # t1 = threading.Thread(target=threadStarterMyntra, args=(), kwargs={
+            #    "exe_pth": exe_pth, "mid_base": prefix_link_brand[category]['url'], "brand_name": brand, "category": category})
 
-    for t in thrds:
-        t.start()
-    for t in thrds:
-        t.join()
+            scrape_params.append(
+                [exe_pth, prefix_link_brand[category]['url'], brand, category])
+
+    with ThreadPoolExecutor(MAX_WORKERS) as executor:
+        process = {executor.submit(threadStarterMyntra,
+                                   exe_pth=exe_pth,
+                                   mid_base=mid_base,
+                                   brand_name=brand_name,
+                                   category=category): process_num for process_num, (exe_pth, mid_base, brand_name, category) in enumerate(scrape_params)}
+        
+        for completed_task in as_completed(process):
+            task_num = process[completed_task]
+            try:
+                completed_task.result()
+                print("Completed Task:",scrape_params[task_num])
+            except Exception as exp:
+                print("Exception Occured while completing:",scrape_params[task_num])
+                print(exp)
+
     return
 
+#################### Config Params ################
+##################### ---------------------------------################################
+MAX_WORKERS = 5
 
 if __name__ == "__main__":
     startScraper(exe_pth="E:\\Scrap\\chromedriver-win64")
