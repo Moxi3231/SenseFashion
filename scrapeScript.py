@@ -18,11 +18,10 @@ from webdriver_manager.chrome import ChromeDriverManager
 
 
 def getMongoClient():
-    uri = "mongodb+srv://dagulathiya30:" + \
-        quote_plus("Darshan@45") + \
-        "@scrape.8yqpmc0.mongodb.net/?retryWrites=true&w=majority"
+    uri = "mongodb://localhost:27017/"
     client = MongoClient(uri, server_api=ServerApi('1'))
     return client
+
 
 
 def pressClear(driver):
