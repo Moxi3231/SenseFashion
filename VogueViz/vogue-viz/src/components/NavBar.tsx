@@ -44,21 +44,21 @@ export default function NavBar() {
         {session && (
             <>
                 <Nav.Item>
-                    <Nav.Link href="/add-product-brand" className="text-info font-weight-bold">Add Scrape Data</Nav.Link>
+                    <Nav.Link href="/add-product-brand" className="text-primary font-weight-bold">Add Scrape Data</Nav.Link>
                 </Nav.Item>
                 <Nav.Item>
-                    <Nav.Link href="/scrape-data" className="text-info font-weight-bold">Scrape Data</Nav.Link>
+                    <Nav.Link href="/scrape-data" className="text-primary font-weight-bold">Scrape Data</Nav.Link>
                 </Nav.Item>
             </>
         )}
         <Nav.Item>
-            <Nav.Link onClick={() => { showAdminModal(true); }} disabled={session?.user != undefined} className="text-danger font-weight-bold">Admin</Nav.Link>
+            <Nav.Link onClick={() => { showAdminModal(true); }} disabled={session?.user != undefined} className="text-success-emphasis font-weight-bold">Admin</Nav.Link>
         </Nav.Item>
     </Nav>
 
     {session && (
         <>
-            <NavDropdown className="text-success font-weight-bold" title={"Signed In as: ".concat(session.user?.name!)} id="d1">
+            <NavDropdown className="text-success-emphasis font-weight-bold" title={session.user?.name!} id="d1">
                 <NavDropdown.Item onClick={() => { signOut(); }} className="text-danger">Sign Out</NavDropdown.Item>
             </NavDropdown>
         </>

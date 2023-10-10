@@ -13,7 +13,7 @@ export default function Home() {
           <h1 className="display-4 mb-4">Welcome to Vogue Viz!</h1>
           <p className="lead mb-4">Unlock the potential of your data with compelling visualizations.</p>
         </section>
-
+        
 
       </Container>
 

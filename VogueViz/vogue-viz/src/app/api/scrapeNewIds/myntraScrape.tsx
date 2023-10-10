@@ -2,6 +2,8 @@
 import dbConfig from "@/components/mongoConfig";
 import clientPromise from "../mongo-client";
 import { parse } from 'node-html-parser';
+const user_agents = ["Mozilla/5.0 (Windows NT 6.1; Win64; x64; rv:47.0) Gecko/20100101 Firefox/47.0",
+"Mozilla/5.0 (Macintosh; Intel Mac OS X x.y; rv:42.0) Gecko/20100101 Firefox/42.0"]
 async function getRecord(productId: number) {
     try {
         const cp = await clientPromise;
@@ -58,7 +60,7 @@ async function fetchBrandPage(fin_url: string, brand_name: string, category: str
     const final_url_page = fin_url + "&p=" + page_number.toString();
     let hasNextPage = true;
     try {
-        await fetch(final_url_page).then(async (response) => {
+        await fetch(final_url_page, { headers: { 'User-Agent': user_agents[Math.floor(Math.random() * user_agents.length)] } }).then(async (response) => {
             if (response.ok) {
                 const html_data = await response.text();
                 const scripts = parse(html_data).getElementsByTagName('script');
@@ -107,7 +109,6 @@ async function fetchBrand(fin_url: string, brand_name: string, category: string)
     while (hasNext) {
         page_number += 1
         hasNext = await fetchBrandPage(fin_url, brand_name, category, page_number);
-        console.log(page_number,brand_name);
     }
     console.log("Brand Done", brand_name);
 }
@@ -121,16 +122,13 @@ export default async function scrapeNewIds() {
         const categories = Object.keys(config);
 
         const base_url_myntra = "https://www.myntra.com";
-        categories.map((category) => {
+        await Promise.all(categories.map(async (category) => {
             const base_url_category = base_url_myntra + config[category]['url'];
-
             const brands: string[] = config[category]['brands'];
-
-            brands.map(async (brnd) => {
+            await Promise.all(brands.map(async (brnd) => {
                 fetchBrand(base_url_category + brnd + "&sort=new", brnd, category);
-            });
-        });
-
+            }));
+        }));
     } catch (exception) {
         console.log(exception);
     }

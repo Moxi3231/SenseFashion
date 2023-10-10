@@ -10,7 +10,7 @@ export async function POST(request: NextRequest) {
 		const db = mongoClientPromise.db(dbConfig.DataBase);
 		const collection = db.collection(dbConfig.ProductsCollection);
 		const resp = await request.json();
-		console.log(resp.productId);
+
         data = await collection.findOne({productId: resp.productId});
 	}
 	catch (exception) {
