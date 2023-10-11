@@ -29,17 +29,18 @@ async function insertData(filtered_data: any) {
             //console.log(record);
             const cp = await clientPromise;
             const coll = cp.db(dbConfig.DataBase).collection(dbConfig.ProductsCollection);
+
             coll.updateOne({ productId: filtered_data['productId'] }, {
                 $push: {
                     ratingCount: filtered_data['ratingCount'][0],
                     rating: filtered_data['rating'][0],
-                    price: filtered_data['price'][0]
+                    price: filtered_data['price'][0],
+                    inventoryInfo: filtered_data['inventoryInfo']
                 },
                 $set: {
                     images: filtered_data["images"],
                     landingPageUrl: filtered_data["landingPageUrl"],
                     mrp: filtered_data['mrp'],
-                    inventoryInfo: filtered_data['inventoryInfo']
                 }
             }, { upsert: true });
         } else {

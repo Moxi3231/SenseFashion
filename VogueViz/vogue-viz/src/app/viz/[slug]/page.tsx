@@ -10,12 +10,28 @@ import Image from 'react-bootstrap/Image';
 import Form from 'react-bootstrap/Form';
 import Spinner from 'react-bootstrap/Spinner';
 import { LineChart, Line, CartesianGrid, XAxis, YAxis, Tooltip } from 'recharts';
+
+const graphColors = [
+    "#A2D5F2", // Pastel Blue
+    "#91E5A9", // Muted Green
+    "#FEC8D8", // Soft Peach
+    "#DAC4FF", // Light Lavender
+    "#FFD3BA", // Warm Sand
+    "#3ECFAF", // Pastel Turquoise
+    "#FF9AA2", // Muted Coral
+    "#FFB7B2", // Misty Rose
+    "#ACD39E", // Pastel Olive
+    "#CFCFCF"  // Cool Grey
+];
+
+
+
 function ProductDetailCard(props: any) {
     const pData = props.pData;
     const images = props.images;
     return (
         <Row className="mb-4">
-            
+
             <Col md={6} className="w-50">
 
                 <Card className="shadow-sm h-100">
@@ -65,10 +81,10 @@ function ProductDetailCard(props: any) {
                             </Card.Text>
                             <Row>
                             </Row>
-                            
+
                         </Card.Body>
                         <Card.Footer>
-                        <a href={"https://myntra.com/".concat(pData.eData.landingPageUrl)} target="_blank" className="mt-3 text-muted text-center">
+                            <a href={"https://myntra.com/".concat(pData.eData.landingPageUrl)} target="_blank" className="mt-3 text-muted text-center">
                                 Visit Product Page
                             </a>
                         </Card.Footer>
@@ -97,7 +113,7 @@ export default function vizCharts({ params }: { params: { slug: string } }) {
     const [pData, setPData] = useState<any>({});
     const [images, setImages] = useState<string[]>([]);
 
-    const pid = params.slug;    
+    const pid = params.slug;
     const fetchData = async () => {
 
         const resp = await fetch('/api/getPIDData', {
@@ -107,7 +123,7 @@ export default function vizCharts({ params }: { params: { slug: string } }) {
         }).then(res => res.json());
         if (resp.dataFetch) {
             const data: any = resp.data;
-            const transformedData = { graphData: new Array<any>(), eData: data };
+            const transformedData = { graphData: new Array<any>(), priceData: new Array<any>(), inventoryData: new Array<any>(), eData: data };
             for (var i = 0; i < data.rating.length; i++) {
                 transformedData.graphData.push({
                     rating: data.rating[i],
@@ -115,13 +131,34 @@ export default function vizCharts({ params }: { params: { slug: string } }) {
                     ratingCount: data.ratingCount[i]
                 });
             }
+            for (var i = 0; i < data.price.length; i++) {
+                transformedData.priceData.push({
+                    price: data.price.at(i),
+                    day_nm: i + 1
+                })
+            }
+            ////
+            
+            data.inventoryInfo.forEach((inventoryInfo:any,idx:number) => {
+                const raw_size:any = {};
+                data.sizes!.split(",").forEach((size:string) => {
+                    raw_size[size] = 0;
+                });
+                inventoryInfo.forEach((item:any) => {
+                    raw_size[item['brandSizeLabel']] = item['inventory'];
+                });
+                raw_size['day_nm'] = idx+1;
+                transformedData.inventoryData.push(raw_size);
+            })
+
+            console.log(transformedData.inventoryData)
             const images_tmp: any = [];
             Array.from(new Set(transformedData.eData.images)).map((val) => {
                 if (val !== "")
                     images_tmp.push(val);
             })
             setImages(images_tmp);
-            setPData(transformedData);   
+            setPData(transformedData);
         }
     };
 
@@ -131,9 +168,9 @@ export default function vizCharts({ params }: { params: { slug: string } }) {
         <Container className="mt-5">
             <ProductDetailCard pData={pData} images={images}></ProductDetailCard>
 
-            <Row className="mb-4">
+            <Row className="mb-4 gap-3">
                 <Col md={12}>
-                    <Card className="shadow-sm mb-4">
+                    <Card className="shadow-sm">
                         <Card.Body>
                             <Card.Title>Average Ratings</Card.Title>
                             <LineChart id="G1" width={1200} height={600} data={pData.graphData} margin={{ top: 5, right: 20, bottom: 5, left: 0 }}>
@@ -157,7 +194,39 @@ export default function vizCharts({ params }: { params: { slug: string } }) {
                                 <YAxis />
                                 <Tooltip />
                             </LineChart>
+                        </Card.Body>
+                    </Card>
+                </Col>
 
+                <Col md={12}>
+                    <Card className="shadow-sm">
+                        <Card.Body>
+                            <Card.Title>Price</Card.Title>
+                            <LineChart key={"G3"} id="G3" width={1200} height={600} data={pData.priceData} margin={{ top: 5, right: 20, bottom: 5, left: 0 }}>
+                                <Line type="monotone" dataKey="price" stroke="#8884d8" />
+                                <CartesianGrid stroke="#ccc" strokeDasharray="5 5" />
+                                <XAxis dataKey="day_nm" />
+                                <YAxis />
+                                <Tooltip />
+                            </LineChart>
+                        </Card.Body>
+                    </Card>
+                </Col>
+
+
+                <Col md={12}>
+                    <Card className="shadow-sm">
+                        <Card.Body>
+                            <Card.Title>Inventory</Card.Title>
+                            <LineChart key={"G3"} id="G3" width={1200} height={600} data={pData.inventoryData} margin={{ top: 5, right: 20, bottom: 5, left: 0 }}>
+                                {pData.eData && pData.eData.sizes.split(",").map((size:string,idx:number)=>
+                                    (<Line key={size} type="monotone" dataKey={size} stroke={graphColors.at(idx)} />)
+                                )}
+                                <CartesianGrid stroke="#ccc" strokeDasharray="5 5" />
+                                <XAxis dataKey="day_nm" />
+                                <YAxis />
+                                <Tooltip />
+                            </LineChart>
                         </Card.Body>
                     </Card>
                 </Col>
