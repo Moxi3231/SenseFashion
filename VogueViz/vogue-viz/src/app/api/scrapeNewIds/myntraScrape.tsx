@@ -41,6 +41,7 @@ async function insertData(filtered_data: any) {
                     images: filtered_data["images"],
                     landingPageUrl: filtered_data["landingPageUrl"],
                     mrp: filtered_data['mrp'],
+                    sizes: filtered_data['sizes']
                 }
             }, { upsert: true });
         } else {

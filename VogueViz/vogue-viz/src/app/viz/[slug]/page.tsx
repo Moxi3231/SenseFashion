@@ -138,20 +138,21 @@ export default function vizCharts({ params }: { params: { slug: string } }) {
                 })
             }
             ////
-            
-            data.inventoryInfo.forEach((inventoryInfo:any,idx:number) => {
-                const raw_size:any = {};
-                data.sizes!.split(",").forEach((size:string) => {
-                    raw_size[size] = 0;
-                });
-                inventoryInfo.forEach((item:any) => {
-                    raw_size[item['brandSizeLabel']] = item['inventory'];
-                });
-                raw_size['day_nm'] = idx+1;
-                transformedData.inventoryData.push(raw_size);
+
+            data.inventoryInfo.forEach((inventoryInfo: any, idx: number) => {
+                if (data.sizes) {
+                    const raw_size: any = {};
+                    data.sizes!.split(",").forEach((size: string) => {
+                        raw_size[size] = 0;
+                    });
+                    inventoryInfo.forEach((item: any) => {
+                        raw_size[item['brandSizeLabel']] = item['inventory'];
+                    });
+                    raw_size['day_nm'] = idx + 1;
+                    transformedData.inventoryData.push(raw_size);
+                }
             })
 
-            console.log(transformedData.inventoryData)
             const images_tmp: any = [];
             Array.from(new Set(transformedData.eData.images)).map((val) => {
                 if (val !== "")
@@ -219,7 +220,7 @@ export default function vizCharts({ params }: { params: { slug: string } }) {
                         <Card.Body>
                             <Card.Title>Inventory</Card.Title>
                             <LineChart key={"G3"} id="G3" width={1200} height={600} data={pData.inventoryData} margin={{ top: 5, right: 20, bottom: 5, left: 0 }}>
-                                {pData.eData && pData.eData.sizes.split(",").map((size:string,idx:number)=>
+                                {pData.eData && pData.eData.sizes && pData.eData.sizes.split(",").map((size: string, idx: number) =>
                                     (<Line key={size} type="monotone" dataKey={size} stroke={graphColors.at(idx)} />)
                                 )}
                                 <CartesianGrid stroke="#ccc" strokeDasharray="5 5" />
