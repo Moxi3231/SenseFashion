@@ -115,7 +115,6 @@ export default function vizCharts({ params }: { params: { slug: string } }) {
 
     const pid = params.slug;
     const fetchData = async () => {
-
         const resp = await fetch('/api/getPIDData', {
             method: "POST", headers: {
                 "Content-Type": "application/json",
@@ -138,7 +137,6 @@ export default function vizCharts({ params }: { params: { slug: string } }) {
                 })
             }
             ////
-
             data.inventoryInfo.forEach((inventoryInfo: any, idx: number) => {
                 if (data.sizes) {
                     const raw_size: any = {};
@@ -151,8 +149,7 @@ export default function vizCharts({ params }: { params: { slug: string } }) {
                     raw_size['day_nm'] = idx + 1;
                     transformedData.inventoryData.push(raw_size);
                 }
-            })
-
+            });
             const images_tmp: any = [];
             Array.from(new Set(transformedData.eData.images)).map((val) => {
                 if (val !== "")
@@ -168,7 +165,6 @@ export default function vizCharts({ params }: { params: { slug: string } }) {
 
         <Container className="mt-5">
             <ProductDetailCard pData={pData} images={images}></ProductDetailCard>
-
             <Row className="mb-4 gap-3">
                 <Col md={12}>
                     <Card className="shadow-sm">
@@ -232,9 +228,6 @@ export default function vizCharts({ params }: { params: { slug: string } }) {
                     </Card>
                 </Col>
             </Row>
-
-
-
         </Container></>
     );
 }
