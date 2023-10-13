@@ -34,8 +34,8 @@ export async function POST(request: NextRequest) {
 	try {
 		const req = await request.json();
 		if (req.API_CALL_VALID) {
-            await init();
-            await validate();
+            //await init();
+            //await validate();
 		}
 	}
 	catch (exception) {
