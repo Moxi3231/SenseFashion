@@ -2,28 +2,7 @@
 import dbConfig from "@/components/mongoConfig";
 import clientPromise from "../mongo-client";
 import { parse } from 'node-html-parser';
-const user_agents = [
-    //# Firefox User Agents
-    "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:90.0) Gecko/20100101 Firefox/90.0",
-    "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) Gecko/20100101 Firefox/90.0",
-    "Mozilla/5.0 (X11; Linux x86_64; rv:90.0) Gecko/20100101 Firefox/90.0",
-    
-    //# Chrome User Agents
-    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36",
-    "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36",
-    "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36",
-    
-    //# Safari User Agents
-    "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/14.0.1 Safari/605.1.15",
-    
-    //# Edge User Agents
-    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36 Edg/91.0.864.48",
-    
-    //# Opera User Agents
-    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/76.0.3809.132 Safari/537.36 OPR/63.0.3368.71",
-    "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/76.0.3809.132 Safari/537.36 OPR/63.0.3368.71",
-    "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/76.0.3809.132 Safari/537.36 OPR/63.0.3368.71",
-]
+import headers from "@/components/UserAgent";
 
 
 async function getRecord(productId: number) {
@@ -46,8 +25,8 @@ async function insertData(filtered_data: any) {
         if (record) {
             //Number of days 
             //console.log(record['rating'].length)
-            if (45 < record['rating'].length)
-                return 1;
+            //if (45 < record['rating'].length)
+            //    return 1;
             //console.log(record);
             const cp = await clientPromise;
             const coll = cp.db(dbConfig.DataBase).collection(dbConfig.ProductsCollection);
@@ -84,7 +63,7 @@ async function fetchBrandPage(fin_url: string, brand_name: string, category: str
     const final_url_page = fin_url + "&p=" + page_number.toString();
     let hasNextPage = true;
     try {
-        await fetch(final_url_page, { headers: { 'User-Agent': user_agents[Math.floor(Math.random() * user_agents.length)] } }).then(async (response) => {
+        await fetch(final_url_page, { headers: { 'User-Agent': headers[Math.floor(Math.random() * headers.length)] } }).then(async (response) => {
             if (response.ok) {
                 const html_data = await response.text();
                 const scripts = parse(html_data).getElementsByTagName('script');
@@ -114,8 +93,8 @@ async function fetchBrandPage(fin_url: string, brand_name: string, category: str
                             };
                             const sErrorCode = await insertData(filtered_data);
                             //console.log("CODE",sErrorCode);
-                            if (sErrorCode == 1)
-                                return false;
+                            //if (sErrorCode == 1)
+                            //    return false;
                         }
                         hasNextPage = json_data['searchData']['results']['hasNextPage'];
                     }
