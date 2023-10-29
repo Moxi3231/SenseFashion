@@ -10,6 +10,7 @@ import Image from 'react-bootstrap/Image';
 import Form from 'react-bootstrap/Form';
 import Spinner from 'react-bootstrap/Spinner';
 import { LineChart, Line, CartesianGrid, XAxis, YAxis, Tooltip } from 'recharts';
+import { Button } from "react-bootstrap";
 
 const graphColors = [
     "#A2D5F2", // Pastel Blue
@@ -31,9 +32,7 @@ function ProductDetailCard(props: any) {
     const images = props.images;
     return (
         <Row className="mb-4">
-
             <Col md={6} className="w-50">
-
                 <Card className="shadow-sm h-100">
                     {!pData.eData && <>
                         <Spinner animation="grow" className="text-center m-auto" role="status">
@@ -41,7 +40,7 @@ function ProductDetailCard(props: any) {
                         </Spinner></>}
                     {pData.eData && (<>
                         <Card.Header>
-                            <Card.Title>{pData.eData.productName}</Card.Title>
+                            <Card.Title className="text-center m-auto">{pData.eData.productName}</Card.Title>
                         </Card.Header>
                         <Card.Body>
                             <Row>
@@ -84,9 +83,15 @@ function ProductDetailCard(props: any) {
 
                         </Card.Body>
                         <Card.Footer>
-                            <a href={"https://myntra.com/".concat(pData.eData.landingPageUrl)} target="_blank" className="mt-3 text-muted text-center">
-                                Visit Product Page
-                            </a>
+                            <div className="d-flex">
+                                    <a href={"https://myntra.com/".concat(pData.eData.landingPageUrl)} target="_blank" className="btn btn-sm btn-light text-muted">
+                                        Visit Product Page
+                                    </a>
+                                <Button size="sm" className="btn-light ms-auto">
+                                    Inventory
+                                </Button>
+                            </div>
+
                         </Card.Footer>
                     </>)}
                 </Card>
@@ -136,20 +141,28 @@ export default function vizCharts({ params }: { params: { slug: string } }) {
                     day_nm: i + 1
                 })
             }
-            ////
-            data.inventoryInfo.forEach((inventoryInfo: any, idx: number) => {
-                if (data.sizes) {
-                    const raw_size: any = {};
-                    data.sizes!.split(",").forEach((size: string) => {
-                        raw_size[size] = 0;
-                    });
-                    inventoryInfo.forEach((item: any) => {
-                        raw_size[item['brandSizeLabel']] = item['inventory'];
-                    });
-                    raw_size['day_nm'] = idx + 1;
-                    transformedData.inventoryData.push(raw_size);
-                }
-            });
+            ////\\\\
+            //  \\\\////
+
+            if (data.inventoryInfo) {
+                data.inventoryInfo.forEach((inventoryInfo: any, idx: number) => {
+                    if (data.sizes) {
+                        const raw_size: any = {};
+                        data.sizes!.split(",").forEach((size: string) => {
+                            raw_size[size] = 0;
+                        });
+                        if (Array.isArray(inventoryInfo)) {
+                            inventoryInfo.forEach((item: any) => {
+                                raw_size[item['brandSizeLabel']] = item['inventory'];
+                            });
+                        } else {
+                            raw_size[inventoryInfo['brandSizeLabel']] = inventoryInfo['inventory'];
+                        }
+                        raw_size['day_nm'] = idx + 1;
+                        transformedData.inventoryData.push(raw_size);
+                    }
+                });
+            }
             const images_tmp: any = [];
             Array.from(new Set(transformedData.eData.images)).map((val) => {
                 if (val !== "")

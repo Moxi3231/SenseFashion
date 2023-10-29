@@ -130,7 +130,7 @@ export default function viz() {
                             pRatings.map((val) => 
                             <tr key={val._id}>
                                 <th>
-                                    <Nav.Link href={"/viz/"
+                                    <Nav.Link target="_blank" href={"/viz/"
                                         .concat(new Number(val.productId).toString())}>{val.productId}</Nav.Link>
                                 </th>
                                 <th>{val['rating'].at(-1)}</th>

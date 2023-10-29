@@ -36,7 +36,9 @@ async function insertData(filtered_data: any) {
                     ratingCount: filtered_data['ratingCount'][0],
                     rating: filtered_data['rating'][0],
                     price: filtered_data['price'][0],
-                    inventoryInfo: filtered_data['inventoryInfo']
+                    //
+                    //inventoryInfo: filtered_data['inventoryInfo']
+                    //
                 },
                 $set: {
                     images: filtered_data["images"],
@@ -88,7 +90,8 @@ async function fetchBrandPage(fin_url: string, brand_name: string, category: str
                                 site_name: "MYNTRA",
                                 brand_name: brand_name,
                                 category: category,
-                                inventoryInfo: product['inventoryInfo'],
+                                //inventoryInfo: product['inventoryInfo'],
+                                inventoryInfo: [],
                                 first_scrape_date: new Date()
                             };
                             const sErrorCode = await insertData(filtered_data);
@@ -129,7 +132,7 @@ export default async function scrapeNewIds() {
             const base_url_category = base_url_myntra + config[category]['url'];
             const brands: string[] = config[category]['brands'];
             await Promise.all(brands.map(async (brnd) => {
-                fetchBrand(base_url_category + brnd + "&sort=new", brnd, category);
+                await fetchBrand(base_url_category + brnd + "&sort=new", brnd, category);
             }));
         }));
     } catch (exception) {
