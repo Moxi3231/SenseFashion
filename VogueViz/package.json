@@ -1,0 +1,5 @@
+{
+  "dependencies": {
+    "p-limit": "^4.0.0"
+  }
+}

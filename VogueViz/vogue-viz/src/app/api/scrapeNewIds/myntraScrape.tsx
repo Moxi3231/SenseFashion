@@ -3,6 +3,7 @@ import dbConfig from "@/components/mongoConfig";
 import clientPromise from "../mongo-client";
 import { parse } from 'node-html-parser';
 import headers from "@/components/UserAgent";
+import pLimit from 'p-limit'
 
 
 async function getRecord(productId: number) {
@@ -31,7 +32,7 @@ async function insertData(filtered_data: any) {
             const cp = await clientPromise;
             const coll = cp.db(dbConfig.DataBase).collection(dbConfig.ProductsCollection);
 
-            coll.updateOne({ productId: filtered_data['productId'] }, {
+            await coll.updateOne({ productId: filtered_data['productId'] }, {
                 $push: {
                     ratingCount: filtered_data['ratingCount'][0],
                     rating: filtered_data['rating'][0],
@@ -50,7 +51,7 @@ async function insertData(filtered_data: any) {
         } else {
             const cp = await clientPromise;
             const coll = cp.db(dbConfig.DataBase).collection(dbConfig.ProductsCollection);
-            coll.insertOne(filtered_data);
+            await coll.insertOne(filtered_data);
 
         }
     }
@@ -120,6 +121,9 @@ async function fetchBrand(fin_url: string, brand_name: string, category: string)
 }
 export default async function scrapeNewIds() {
     try {
+
+        const process_limit = pLimit(Number.parseInt(process.env.NUM_PROCESS_FETCH!));
+        
         const cprm = await clientPromise;
         const collection = cprm.db(dbConfig.DataBase).collection(dbConfig.ConfigCollection);
         const myntraConfig: any = (await collection.find({ 'ScrapeSource': 'MYNTRA' }).toArray()).at(0);
@@ -128,13 +132,15 @@ export default async function scrapeNewIds() {
         const categories = Object.keys(config);
 
         const base_url_myntra = "https://www.myntra.com";
-        await Promise.all(categories.map(async (category) => {
+
+        const tasks = categories.flatMap(category => {
             const base_url_category = base_url_myntra + config[category]['url'];
             const brands: string[] = config[category]['brands'];
-            await Promise.all(brands.map(async (brnd) => {
-                await fetchBrand(base_url_category + brnd + "&sort=new", brnd, category);
-            }));
-        }));
+            return brands.map(brnd => process_limit(() => fetchBrand(base_url_category + brnd + "&sort=new", brnd, category)));
+        });
+
+        await Promise.all(tasks);
+
     } catch (exception) {
         console.log(exception);
     }

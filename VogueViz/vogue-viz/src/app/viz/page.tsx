@@ -117,7 +117,7 @@ export default function viz() {
             )}
 
             {brand.length > 0 &&
-                <><Table striped bordered hover size="sm">
+                <><Table striped bordered hover responsive="lg" size="sm">
                     <thead>
                         <tr>
                             <th>Product Id</th>
