@@ -18,6 +18,7 @@ export default function viz() {
     const [sources, setSources] = useState(Array<String>);
     const [categories, setCategories] = useState(Array<String>);
     const [brands, setBrands] = useState(Array<String>);
+    const [prevDays, setPrevDays] = useState(1);
 
     const [configData, setConfigData] = useState<any>({});
 
@@ -65,9 +66,21 @@ export default function viz() {
             }
         }
     }
+    
+    const isInValidRange = (val:any) => {
+        if (prevDays == 1)
+            return false;
+
+        var diff = Math.ceil(Math.abs(new Date().getTime() - new Date(val['first_scrape_date']).getTime() ) /(1000*24*60*60));
+        console.log(val['first_scrape_date'], diff, prevDays);
+        return ! (diff + prevDays <= 0);
+    };
+
     useEffect(() => {
         fetchScrapeSources();
     }, []);
+
+
     return (<Container className="shadow-sm my-5 p-4 rounded">
         <Row className="align-items-center mb-4">
             <Col xs={4} className="text-center">
@@ -92,7 +105,19 @@ export default function viz() {
                 </Form.Select>
             </Col>
         </Row>
-
+        <Row className="justify-content-center">
+            <Col xs={8} >
+                <Form.Label className="d-block mb-2">Filter Previous Days: {prevDays == 1 && <span>None</span>} {prevDays < 0 && <span>{-1 * prevDays}</span>}</Form.Label>
+                <Form.Range 
+                    disabled={brand.length === 0} 
+                    min={-100} 
+                    max={-1} 
+                    value={prevDays}
+                    onChange={(event) => setPrevDays(Number.parseInt(event.target.value))}
+                    className="custom-range"
+                />
+            </Col>
+        </Row>
 
 
         <Container className="border-top pt-4 mt-4">
@@ -127,15 +152,16 @@ export default function viz() {
                     </thead>
                     <tbody>
                         {
-                            pRatings.map((val) => 
-                            <tr key={val._id}>
-                                <th>
-                                    <Nav.Link target="_blank" href={"/viz/"
-                                        .concat(new Number(val.productId).toString())}>{val.productId}</Nav.Link>
-                                </th>
-                                <th>{val['rating'].at(-1)}</th>
-                                <th>{val.ratingCount.at(-1)}</th>
-                            </tr>)
+                            pRatings.map((val) =>
+                                <tr key={val._id} hidden={isInValidRange(val)}>
+                                    <th>
+                                        <Nav.Link target="_blank" href={"/viz/"
+                                            .concat(new Number(val.productId).toString())}>{val.productId}</Nav.Link>
+                                    </th>
+                                    <th>{val['rating'].at(-1)}</th>
+                                    <th>{val.ratingCount.at(-1)}
+                                    </th>
+                                </tr>)
                         }
                     </tbody>
                 </Table>
