@@ -63,14 +63,14 @@ async function insertData(filtered_data: any) {
     return 0;
 }
 async function fetchBrandPage(fin_url: string, brand_name: string, category: string, page_number: number) {
-
+    
     try {
         const final_url_page = fin_url + "&p=" + page_number.toString();
         await fetch(final_url_page, { headers: { 'User-Agent': headers[Math.floor(Math.random() * headers.length)] } }).then(async (response) => {
             if (response.ok) {
                 const html_data = await response.text();
                 const scripts = parse(html_data).getElementsByTagName('script');
-                for (const script of scripts) {
+                scripts.map(async (script) => {
                     const str_script = script.toString();
                     if (str_script.startsWith('<script>window.__myx =')) {
                         const json_data = JSON.parse(str_script.match('{.*}')?.at(0)!);
@@ -95,14 +95,14 @@ async function fetchBrandPage(fin_url: string, brand_name: string, category: str
                                 inventoryInfo: [],
                                 first_scrape_date: new Date()
                             };
-                            const sErrorCode = await insertData(filtered_data);
+                            //const sErrorCode = await insertData(filtered_data);
                             //console.log("CODE",sErrorCode);
                             //if (sErrorCode == 1)
                             //    return false;
                         }
                         return json_data['searchData']['results']['hasNextPage'];
                     }
-                }
+                });
 
             }
         });
@@ -119,17 +119,18 @@ async function fetchBrand(fin_url: string, brand_name: string, category: string)
         page_number += 1
         hasNext = await fetchBrandPage(fin_url, brand_name, category, page_number);
     }
-    console.log("Brand Done", brand_name, " Category:", category);
+    console.log("Brand Done", brand_name," Category:",category);
     return;
 }
 export default async function scrapeNewIds() {
     try {
 
-        const process_limit = pLimit(Number.parseInt(process.env.NUM_PROCESS_FETCH!));
+        const process_limit = pLimit(5);
 
         const cprm = await clientPromise;
-        const collection = cprm.db(dbConfig.DataBase).collection(dbConfig.ConfigCollection);
-        const myntraConfig: any = (await collection.find({ 'ScrapeSource': 'MYNTRA' }).toArray()).at(0);
+        //const collection = cprm.db(dbConfig.DataBase).collection(dbConfig.ConfigCollection);
+        //const myntraConfig: any = (await collection.find({ 'ScrapeSource': 'MYNTRA' }).toArray()).at(0);
+        const myntraConfig = 
         const config = myntraConfig['data'];
 
         const categories = Object.keys(config);
