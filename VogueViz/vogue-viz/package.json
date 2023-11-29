@@ -13,7 +13,7 @@
     "date-fns": "^2.30.0",
     "mongodb": "^6.1.0",
     "next": "13.5.4",
-    "next-auth": "^4.23.2",
+    "next-auth": "^4.24.5",
     "node-html-parser": "^6.1.10",
     "p-limit": "^4.0.0",
     "react": "^18",
