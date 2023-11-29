@@ -52,13 +52,13 @@ export default function NavBar() {
             </>
         )}
         <Nav.Item>
-            <Nav.Link onClick={() => { showAdminModal(true); }} disabled={session?.user != undefined} className="text-success-emphasis font-weight-bold">Admin</Nav.Link>
+            <Nav.Link onClick={() => { showAdminModal(true); }} disabled={session?.user != undefined} className="text-danger font-weight-bold">Admin</Nav.Link>
         </Nav.Item>
     </Nav>
 
     {session && (
         <>
-            <NavDropdown className="text-success-emphasis font-weight-bold" title={session.user?.name!} id="d1">
+            <NavDropdown className="text-success font-weight-bold" title={session.user?.name!} id="d1">
                 <NavDropdown.Item onClick={() => { signOut(); }} className="text-danger">Sign Out</NavDropdown.Item>
             </NavDropdown>
         </>

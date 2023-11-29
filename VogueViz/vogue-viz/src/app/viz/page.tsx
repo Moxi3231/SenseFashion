@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import Container from "react-bootstrap/Container"
+import { Popover, OverlayTrigger } from "react-bootstrap";
 import Form from "react-bootstrap/Form";
 import Row from "react-bootstrap/Row";
 import Col from "react-bootstrap/Col";
@@ -9,6 +10,12 @@ import Table from "react-bootstrap/Table";
 import ScrapeSource from "@/components/Models/ScrapeSource";
 import Nav from "react-bootstrap/Nav";
 import Button from "react-bootstrap/Button";
+
+import { format } from 'date-fns';
+import { DayPicker } from 'react-day-picker';
+
+import 'react-day-picker/dist/style.css';
+
 export default function viz() {
 
     const [scrapeSource, setScrapeSource] = useState("");
@@ -23,6 +30,8 @@ export default function viz() {
     const [configData, setConfigData] = useState<any>({});
 
     const [pRatings, setPRatings] = useState<Array<any>>([]);
+
+
     const fetchScrapeSources = async () => {
         const data: Array<String> = (await ScrapeSource.fetchScrapeSources()).data;
         setSources(data);
@@ -66,19 +75,53 @@ export default function viz() {
             }
         }
     }
-    
-    const isInValidRange = (val:any) => {
-        if (prevDays == 1)
-            return false;
 
-        var diff = Math.ceil(Math.abs(new Date().getTime() - new Date(val['first_scrape_date']).getTime() ) /(1000*24*60*60));
-        console.log(val['first_scrape_date'], diff, prevDays);
-        return ! (diff + prevDays <= 0);
-    };
+    
 
     useEffect(() => {
         fetchScrapeSources();
     }, []);
+
+    const [filterStartDate, setFilterStartDate] = useState<Date>(new Date());
+    const [filterEndDate, setFilterEndDate] = useState<Date>(new Date());
+    const isInValidRange = (val: any) => {
+        const pDate = new Date(val);
+        return filterStartDate <= pDate && pDate <= filterEndDate;
+    };
+    const selectStartDate =   (
+        <Popover
+         style={{
+            maxWidth:'100%'
+        }}>
+
+                <DayPicker
+                    mode="single"
+                    selected={filterStartDate}
+                    disabled={[{ from: new Date(new Date().getTime() + (1000 * 60 * 60 * 24)), to: new Date(2300, 1, 1) }]}
+                    onSelect={(date) => {
+                        setFilterStartDate(date!);
+                        if (date && date > filterEndDate)
+                            setFilterEndDate(new Date());
+                    }}
+                />
+            </Popover>
+    );
+
+    const selectEndDate = (
+        <Popover style={{
+            maxWidth:'100%'
+        }}>
+                <DayPicker
+                    mode="single"
+                    selected={filterEndDate}
+                    disabled={[{ from: new Date(2000, 1, 1), to: filterStartDate }]}
+                    onSelect={(date) => {
+                        setFilterEndDate(date!);
+                    }}
+                />
+        </Popover>
+    );
+
 
 
     return (<Container className="shadow-sm my-5 p-4 rounded">
@@ -106,16 +149,29 @@ export default function viz() {
             </Col>
         </Row>
         <Row className="justify-content-center">
-            <Col xs={8} >
-                <Form.Label className="d-block mb-2">Filter Previous Days: {prevDays == 1 && <span>None</span>} {prevDays < 0 && <span>{-1 * prevDays}</span>}</Form.Label>
-                <Form.Range 
-                    disabled={brand.length === 0} 
-                    min={-100} 
-                    max={-1} 
-                    value={prevDays}
-                    onChange={(event) => setPrevDays(Number.parseInt(event.target.value))}
-                    className="custom-range"
-                />
+            <Col xs={4}>
+                <OverlayTrigger
+                    trigger="click"
+                    rootClose
+                    placement="bottom"
+                    overlay={selectStartDate}
+                >
+                    <Button variant="primary" disabled={brand.length == 0}> {/* Changed to 'info' variant */}
+                        Start Date: {filterStartDate ? format(filterStartDate, 'PP') : 'Select'}
+                    </Button>
+                </OverlayTrigger>
+            </Col>
+            <Col xs={3}>
+                <OverlayTrigger
+                    trigger="click"
+                    rootClose
+                    placement="bottom"
+                    overlay={selectEndDate}
+                >
+                    <Button variant="primary" disabled={brand.length == 0}> {/* Changed to 'warning' variant */}
+                        End Date: {filterEndDate ? format(filterEndDate, 'PP') : 'Select'}
+                    </Button>
+                </OverlayTrigger>
             </Col>
         </Row>
 
@@ -153,7 +209,7 @@ export default function viz() {
                     <tbody>
                         {
                             pRatings.map((val) =>
-                                <tr key={val._id} hidden={isInValidRange(val)}>
+                                <tr key={val._id} hidden={!isInValidRange(val.first_scrape_date)}>
                                     <th>
                                         <Nav.Link target="_blank" href={"/viz/"
                                             .concat(new Number(val.productId).toString())}>{val.productId}</Nav.Link>
