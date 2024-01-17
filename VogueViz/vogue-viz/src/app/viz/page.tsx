@@ -86,6 +86,8 @@ export default function viz() {
     const [filterEndDate, setFilterEndDate] = useState<Date>(new Date());
     const isInValidRange = (val: any) => {
         const pDate = new Date(val);
+        console.log(pDate);
+        console.log(new Date());
         return filterStartDate <= pDate && pDate <= filterEndDate;
     };
     const selectStartDate =   (
@@ -209,6 +211,7 @@ export default function viz() {
                     <tbody>
                         {
                             pRatings.map((val) =>
+                                
                                 <tr key={val._id} hidden={!isInValidRange(val.first_scrape_date)}>
                                     <th>
                                         <Nav.Link target="_blank" href={"/viz/"

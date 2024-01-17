@@ -63,10 +63,11 @@ async function insertData(filtered_data: any) {
     return 0;
 }
 async function fetchBrandPage(fin_url: string, brand_name: string, category: string, page_number: number) {
-
+    let flag: boolean = false;
     try {
         const final_url_page = fin_url + "&p=" + page_number.toString();
-        await fetch(final_url_page, { headers: { 'User-Agent': headers[Math.floor(Math.random() * headers.length)] } }).then(async (response) => {
+        //console.log(final_url_page);
+        await fetch(final_url_page, { headers: { 'User-Agent': headers[Math.floor(Math.random() * headers.length)] }  }).then(async (response) => {
             if (response.ok) {
                 const html_data = await response.text();
                 const scripts = parse(html_data).getElementsByTagName('script');
@@ -100,7 +101,8 @@ async function fetchBrandPage(fin_url: string, brand_name: string, category: str
                             //if (sErrorCode == 1)
                             //    return false;
                         }
-                        return json_data['searchData']['results']['hasNextPage'];
+                        //console.log("HAS NEXT PAGE: ",json_data['searchData']['results']['hasNextPage']);
+                        flag = json_data['searchData']['results']['hasNextPage'];
                     }
                 }
 
@@ -110,14 +112,16 @@ async function fetchBrandPage(fin_url: string, brand_name: string, category: str
         console.error(exception);
     }
 
-    return false;
+    return flag;
 }
 async function fetchBrand(fin_url: string, brand_name: string, category: string) {
     let page_number = 1;
     let hasNext = await fetchBrandPage(fin_url, brand_name, category, page_number);
+    //console.log("Brand Page Done", brand_name, "Category:", category, " Page Num:", page_number, " HN: ",hasNext);
     while (hasNext) {
         page_number += 1
         hasNext = await fetchBrandPage(fin_url, brand_name, category, page_number);
+        //console.log("Brand Page Done", brand_name, "Category:", category, " Page Num:", page_number, " HN: ",hasNext);
     }
     console.log("Brand Done", brand_name, " Category:", category);
     return;
