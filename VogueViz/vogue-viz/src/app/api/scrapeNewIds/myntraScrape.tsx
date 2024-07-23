@@ -133,7 +133,7 @@ export default async function scrapeNewIds() {
 
         const cprm = await clientPromise;
         const collection = cprm.db(dbConfig.DataBase).collection(dbConfig.ConfigCollection);
-        const myntraConfig: any = (await collection.find({ 'ScrapeSource': 'MYNTRA' }).toArray()).at(0);
+        const myntraConfig: any = (await collection.find({ 'ScrapeSource': {$regex: new RegExp('Myntra','i')} }).toArray()).at(0);
         const config = myntraConfig['data'];
 
         const categories = Object.keys(config);
