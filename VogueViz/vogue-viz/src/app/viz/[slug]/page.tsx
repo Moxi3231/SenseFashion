@@ -125,6 +125,7 @@ export default function vizCharts({ params }: { params: { slug: string } }) {
                 "Content-Type": "application/json",
             }, body: JSON.stringify({ productId: Number.parseInt(pid) })
         }).then(res => res.json());
+        
         if (resp.dataFetch) {
             const data: any = resp.data;
             const transformedData = { graphData: new Array<any>(), priceData: new Array<any>(), inventoryData: new Array<any>(), eData: data };

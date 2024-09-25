@@ -49,6 +49,14 @@ export default function NavBar() {
                 <Nav.Item>
                     <Nav.Link href="/scrape-data" className="text-primary font-weight-bold">Scrape Data</Nav.Link>
                 </Nav.Item>
+
+                <Nav.Item>
+                    <Nav.Link href="/scrape-ids" className="text-primary font-weight-bold">Scrape Single Products | From Excel</Nav.Link>
+                </Nav.Item>
+
+                <Nav.Item>
+                    <Nav.Link href="/render-single-products" className="text-primary font-weight-bold">Viz Single Products</Nav.Link>
+                </Nav.Item>
             </>
         )}
         <Nav.Item>

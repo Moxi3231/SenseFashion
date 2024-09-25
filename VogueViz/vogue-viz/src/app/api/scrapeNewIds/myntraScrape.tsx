@@ -74,7 +74,7 @@ async function fetchBrandPage(fin_url: string, brand_name: string, category: str
                 for (const script of scripts) {
                     const str_script = script.toString();
                     if (str_script.startsWith('<script>window.__myx =')) {
-                        const json_data = JSON.parse(str_script.match('{.*}')?.at(0)!);
+                        const json_data = await JSON.parse(str_script.match('{.*}')?.at(0)!);
                         const products_data: Array<any> = json_data['searchData']['results']['products'];
                         //products_data.forEach((product) => {
                         for (var product of products_data) {
