@@ -1,11 +1,7 @@
 import * as XLSX from "xlsx";
 
 import { NextRequest } from "next/server";
-import clientPromise from "../mongo-client";
-import dbConfig from "@/components/mongoConfig";
 import scrapeMyntraPid from "./scrapePid";
-
-import pLimit from "p-limit";
 
 function sleep(ms: any) {
   return new Promise((resolve) => setTimeout(resolve, ms));
@@ -17,7 +13,7 @@ export async function POST(request: NextRequest) {
     const formData = await request.formData();
 
     const fileBuffer = await Buffer.from(
-      await formData.get("scrapeFile")!.arrayBuffer();
+      await formData.get("scrapeFile")!.arrayBuffer()
     );
 
     const workBook = XLSX.read(fileBuffer);
