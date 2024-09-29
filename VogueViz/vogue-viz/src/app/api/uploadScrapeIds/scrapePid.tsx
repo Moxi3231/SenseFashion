@@ -1,7 +1,7 @@
 import { parse } from "node-html-parser";
 import headers from "@/components/UserAgent";
 import insertSingleProductData from "./insertSingleProductData";
-import { Rhodium_Libre } from "next/font/google";
+
 
 export default async function scrapeMyntraPid(pid: any) {
   try {
