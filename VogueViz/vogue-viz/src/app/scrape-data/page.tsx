@@ -22,10 +22,19 @@ export default function scrapeData() {
     };
     const dbInitAndValidate = async () => {
         setIsEnabled(true);
-        const resp = await fetch('/api/validateOrInit',{method:'POST', body: JSON.stringify({ "API_CALL_VALID": true }) }).then(res => res.json()).finally(()=>{
+        await fetch('/api/validateOrInit',{method:'POST', body: JSON.stringify({ "API_CALL_VALID": true }) }).then(res => res.json()).finally(()=>{
             setIsEnabled(false);
         });
     };
+    const padProductsWithZero = async () => {
+        setIsEnabled(true);
+        await fetch('/api/padProductsWithZero', {method: "POST"}).finally(() => {
+            setIsEnabled(false)
+        })
+    };
+    
+
+
     return (<Container className="shadow-sm mt-5 p-5 bg-white rounded">
         <Card className="border-0">
             <Card.Body>
@@ -52,6 +61,18 @@ export default function scrapeData() {
                         size="lg"
                     >
                         Intialize Database or Validate Data
+                    </Button>
+
+                    <Button
+                        onClick={() => {
+                            padProductsWithZero();
+                        }}
+                        className="mb-3"
+                        variant="primary"
+                        disabled={isEnabled}
+                        size="lg"
+                    >
+                        Pad Data 
                     </Button>
                 </div>
 
