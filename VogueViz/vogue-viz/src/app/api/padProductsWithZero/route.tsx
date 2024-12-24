@@ -18,7 +18,9 @@ export async function POST() {
       const ratings: Array<any> = product.rating;
       const ratingsCount: Array<any> = product.ratingCount;
       const prices: Array<any> = product.price;
+      
       if (ratings.length == maxScrapeLen) return;
+
       ratings.unshift(new Array(maxScrapeLen - ratings.length).fill(0));
       ratingsCount.unshift(
         new Array(maxScrapeLen - ratingsCount.length).fill(0)
